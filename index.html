@@ -167,7 +167,7 @@
             border-radius: 16px;
             padding: 8px 8px 8px;
             border: 2px solid var(--border);
-            flex: 0 0 114px;
+            flex: 0 0 124px;
             display: flex; flex-direction: column; align-items: center;
             position: relative;
             transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
@@ -220,21 +220,25 @@
 
         /* Status buttons */
         .status-row {
-            display: flex; width: 100%; gap: 1px;
-            margin-top: 6px; border-top: 1px solid #f1f5f9;
-            padding-top: 5px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            width: 100%; gap: 4px;
+            margin-top: 8px; border-top: 1px solid #f1f5f9;
+            padding-top: 6px;
         }
         .status-dot-btn {
-            flex: 1; border: none; padding: 4px 0; border-radius: 5px;
-            cursor: pointer; font-size: 8px; font-weight: 700;
+            border: 1.5px solid #e2e8f0; padding: 7px 2px; border-radius: 8px;
+            cursor: pointer; font-size: 10px; font-weight: 700;
             text-align: center; background: #f8fafc; color: #94a3b8;
             transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+            line-height: 1;
         }
-        .status-dot-btn.free-btn.active   { background: #dcfce7; color: #16a34a; }
-        .status-dot-btn.res-btn.active    { background: #fee2e2; color: var(--danger); }
-        .status-dot-btn.hotel-btn.active  { background: #dbeafe; color: var(--primary); }
-        .status-dot-btn.spec-btn.active   { background: #ede9fe; color: var(--purple); }
-        .status-dot-btn.broken-btn.active { background: #fef3c7; color: #d97706; }
+        .status-dot-btn:active { transform: scale(0.93); }
+        .status-dot-btn.free-btn.active   { background: #dcfce7; color: #16a34a;        border-color: #16a34a; }
+        .status-dot-btn.res-btn.active    { background: #fee2e2; color: var(--danger);  border-color: var(--danger); }
+        .status-dot-btn.hotel-btn.active  { background: #dbeafe; color: var(--primary); border-color: var(--primary); }
+        .status-dot-btn.spec-btn.active   { background: #ede9fe; color: var(--purple);  border-color: var(--purple); }
+        .status-dot-btn.broken-btn.active { background: #fef3c7; color: #d97706;        border-color: #d97706; }
 
         /* ── FOOTER ── */
         .control-bar {
