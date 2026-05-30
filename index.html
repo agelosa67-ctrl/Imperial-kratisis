@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imperial Beach Management</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary:  #1a6bff;
+            --success:  #18c45a;
+            --warning:  #f59e0b;
+            --purple:   #7c3aed;
+            --danger:   #ef233c;
+            --free-col: #94a3b8;
+            --bg:       #eef2f7;
+            --surface:  #ffffff;
+            --border:   #dde3ed;
+            --text:     #1e293b;
+            --muted:    #64748b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0; padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden;
+        }
+
+        /* ── PIN OVERLAY ── */
+        #pin-overlay {
+            position: fixed; inset: 0;
+            background: linear-gradient(160deg, #1e3a8a 0%, #0f172a 100%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; flex-direction: column; gap: 28px;
+        }
+        .pin-logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 46px; letter-spacing: 6px; color: #fff;
+            text-align: center; line-height: 1.1;
+        }
+        .pin-logo small {
+            display: block; font-family: 'DM Sans', sans-serif;
+            font-size: 11px; letter-spacing: 4px; color: #93c5fd;
+            margin-top: 4px; font-weight: 500;
+        }
+        .pin-card {
+            background: #fff; border-radius: 24px;
+            padding: 32px 44px;
+            display: flex; flex-direction: column; align-items: center; gap: 20px;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+            min-width: 300px;
+        }
+        .pin-card h3 { margin: 0; font-size: 13px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+        .pin-dots { display: flex; gap: 14px; }
+        .pin-dot {
+            width: 14px; height: 14px; border-radius: 50%;
+            border: 2px solid #cbd5e1; background: transparent; transition: all 0.2s;
+        }
+        .pin-dot.filled { background: var(--primary); border-color: var(--primary); }
+        .pin-numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 190px; }
+        .pin-btn {
+            background: #f1f5f9; border: 1px solid var(--border);
+            color: var(--text); font-family: 'DM Sans', sans-serif;
+            font-size: 20px; font-weight: 600;
+            padding: 13px; border-radius: 12px;
+            cursor: pointer; transition: all 0.12s;
+        }
+        .pin-btn:hover { background: #e2e8f0; transform: scale(1.04); }
+        .pin-btn:active { transform: scale(0.96); }
+        .pin-btn.del { font-size: 15px; color: var(--muted); }
+        .pin-error { color: var(--danger); font-size: 12px; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
+        .pin-error.show { opacity: 1; }
+
+        /* ── HEADER ── */
+        header {
+            background: var(--surface);
+            padding: 10px 16px;
+            display: flex; flex-wrap: wrap;
+            justify-content: space-between; align-items: center;
+            gap: 10px; z-index: 10;
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+        }
+        .logo-area h1 {
+            margin: 0; font-family: 'Bebas Neue', sans-serif;
+            font-size: 22px; letter-spacing: 3px; color: var(--text);
+        }
+        .logo-area span { font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+
+        .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+        .zoom-controls {
+            display: flex; align-items: center;
+            background: #f1f5f9; border: 1px solid var(--border);
+            padding: 2px; border-radius: 10px; gap: 2px;
+        }
+        .zoom-btn {
+            border: none; background: transparent; color: var(--text);
+            padding: 4px 10px; font-size: 14px; font-weight: 700;
+            border-radius: 8px; cursor: pointer; transition: background 0.15s;
+        }
+        .zoom-btn:hover { background: var(--border); }
+
+        .date-picker-wrapper {
+            display: flex; align-items: center; gap: 6px;
+            background: #f1f5f9; border: 1px solid var(--border);
+            padding: 5px 10px; border-radius: 10px;
+        }
+        .date-picker-wrapper label { font-size: 11px; font-weight: 600; color: var(--muted); }
+        .date-input { border: none; background: transparent; font-size: 12px; font-weight: 700; outline: none; color: var(--text); cursor: pointer; }
+
+        .stats-container { display: flex; flex-wrap: wrap; gap: 4px; }
+        .stat-badge {
+            background: #f1f5f9; border: 1px solid var(--border);
+            padding: 4px 10px; border-radius: 8px;
+            font-size: 11px; font-weight: 700;
+            display: flex; align-items: center; gap: 5px;
+            cursor: pointer; transition: all 0.15s; user-select: none;
+        }
+        .stat-badge:hover { border-color: #94a3b8; }
+        .stat-badge.active { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); background: #eff6ff; }
+        .stat-num { font-size: 13px; }
+
+        .search-input {
+            padding: 6px 12px; border-radius: 10px;
+            border: 1px solid var(--border);
+            background: #f1f5f9; color: var(--text);
+            font-size: 12px; outline: none; width: 140px;
+        }
+        .search-input:focus { border-color: var(--primary); background: #fff; }
+
+        /* ── MAIN ── */
+        #main-container { flex: 1; overflow: auto; padding: 12px 16px; }
+        #zoom-wrapper {
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: top left; width: 100%;
+        }
+
+        /* ── ROW ── */
+        .beach-row-section { margin-bottom: 18px; }
+        .row-label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 13px; letter-spacing: 3px; color: var(--muted);
+            margin-bottom: 8px; padding-left: 2px;
+        }
+        .row-cards-container {
+            display: flex; flex-wrap: nowrap; gap: 8px;
+            overflow-x: auto; padding-bottom: 6px;
+        }
+        .row-cards-container::-webkit-scrollbar { height: 4px; }
+        .row-cards-container::-webkit-scrollbar-track { background: transparent; }
+        .row-cards-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        /* ── UMBRELLA CARD ── */
+        .umbrella-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 8px 8px 8px;
+            border: 2px solid var(--border);
+            flex: 0 0 114px;
+            display: flex; flex-direction: column; align-items: center;
+            position: relative;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+        }
+        .umbrella-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+
+        /* Χρωματιστό border ανάλογα status */
+        .umbrella-card[data-status="reserved"] { border-color: var(--danger);  box-shadow: 0 0 0 1px var(--danger);  }
+        .umbrella-card[data-status="hotel"]    { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+        .umbrella-card[data-status="special"]  { border-color: var(--purple);  box-shadow: 0 0 0 1px var(--purple);  }
+        .umbrella-card[data-status="broken"]   { border-color: var(--warning); box-shadow: 0 0 0 1px var(--warning); }
+
+        .delete-icon {
+            position: absolute; top: 4px; right: 6px;
+            background: none; border: none; color: #cbd5e1;
+            font-size: 16px; cursor: pointer; transition: color 0.15s;
+        }
+        .delete-icon:hover { color: var(--danger); }
+
+        /* ── UMBRELLA ICON — μεγάλο και χρωματιστό ── */
+        .icon-box {
+            width: 80px; height: 68px;
+            position: relative; margin: 2px 0 6px;
+        }
+        .umbrella-svg { width: 100%; height: 100%; }
+
+        /* Αριθμός — μεγάλος Bebas Neue */
+        .umb-number-badge {
+            position: absolute;
+            top: 13px; left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 26px; letter-spacing: 1px;
+            z-index: 2; white-space: nowrap;
+            line-height: 1;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        .inputs-form { width: 100%; display: flex; flex-direction: column; gap: 2px; }
+        .input-field {
+            width: 100%; border: none;
+            border-bottom: 1px solid #e2e8f0;
+            background: transparent; padding: 3px 2px;
+            font-size: 10px; font-weight: 500; outline: none;
+            text-align: center; color: var(--text);
+            font-family: 'DM Sans', sans-serif; transition: border-color 0.2s;
+        }
+        .input-field::placeholder { color: #cbd5e1; }
+        .input-field:focus { border-bottom-color: var(--primary); }
+
+        /* Status buttons */
+        .status-row {
+            display: flex; width: 100%; gap: 1px;
+            margin-top: 6px; border-top: 1px solid #f1f5f9;
+            padding-top: 5px;
+        }
+        .status-dot-btn {
+            flex: 1; border: none; padding: 4px 0; border-radius: 5px;
+            cursor: pointer; font-size: 8px; font-weight: 700;
+            text-align: center; background: #f8fafc; color: #94a3b8;
+            transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+        }
+        .status-dot-btn.free-btn.active   { background: #dcfce7; color: #16a34a; }
+        .status-dot-btn.res-btn.active    { background: #fee2e2; color: var(--danger); }
+        .status-dot-btn.hotel-btn.active  { background: #dbeafe; color: var(--primary); }
+        .status-dot-btn.spec-btn.active   { background: #ede9fe; color: var(--purple); }
+        .status-dot-btn.broken-btn.active { background: #fef3c7; color: #d97706; }
+
+        /* ── FOOTER ── */
+        .control-bar {
+            background: var(--surface); padding: 10px 16px;
+            display: flex; justify-content: center; flex-wrap: wrap; gap: 8px;
+            border-top: 1px solid var(--border);
+        }
+        .action-btn {
+            padding: 8px 18px; border: none; border-radius: 10px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+        }
+        .action-btn.primary { background: var(--primary); color: white; }
+        .action-btn.primary:hover { background: #1558d6; }
+        .action-btn.secondary { background: #f1f5f9; color: var(--text); border: 1px solid var(--border); }
+        .action-btn.secondary:hover { background: #e2e8f0; }
+        .action-btn.danger-clear { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
+        .action-btn.danger-clear:hover { background: #fecaca; }
+    </style>
+</head>
+<body>
+
+    <!-- PIN OVERLAY -->
+    <div id="pin-overlay">
+        <div class="pin-logo">
+            Imperial Beach
+            <small>MANAGEMENT SUITE</small>
+        </div>
+        <div class="pin-card">
+            <h3>🔒 Εισάγετε Κωδικό</h3>
+            <div class="pin-dots">
+                <div class="pin-dot" id="d0"></div>
+                <div class="pin-dot" id="d1"></div>
+                <div class="pin-dot" id="d2"></div>
+                <div class="pin-dot" id="d3"></div>
+            </div>
+            <div class="pin-numpad">
+                <button class="pin-btn" onclick="pinPress('1')">1</button>
+                <button class="pin-btn" onclick="pinPress('2')">2</button>
+                <button class="pin-btn" onclick="pinPress('3')">3</button>
+                <button class="pin-btn" onclick="pinPress('4')">4</button>
+                <button class="pin-btn" onclick="pinPress('5')">5</button>
+                <button class="pin-btn" onclick="pinPress('6')">6</button>
+                <button class="pin-btn" onclick="pinPress('7')">7</button>
+                <button class="pin-btn" onclick="pinPress('8')">8</button>
+                <button class="pin-btn" onclick="pinPress('9')">9</button>
+                <button class="pin-btn del" onclick="pinClear()">✕</button>
+                <button class="pin-btn" onclick="pinPress('0')">0</button>
+                <button class="pin-btn del" onclick="pinBack()">⌫</button>
+            </div>
+            <div class="pin-error" id="pin-error">Λάθος κωδικός. Ξαναπροσπαθήστε.</div>
+        </div>
+    </div>
+
+    <header>
+        <div class="logo-area">
+            <h1>Imperial Beach</h1>
+            <span>LIVE MANAGEMENT SUITE</span>
+        </div>
+        <div class="header-controls">
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="applyZoom(-0.1)">−</button>
+                <button class="zoom-btn" onclick="applyZoom(0.0)" style="font-size:10px;">100%</button>
+                <button class="zoom-btn" onclick="applyZoom(0.1)">+</button>
+            </div>
+            <div class="date-picker-wrapper">
+                <label>Ημ:</label>
+                <input type="date" id="globalDate" class="date-input" onchange="changeWorkingDate()">
+            </div>
+            <div class="stats-container">
+                <div class="stat-badge active" id="badge-all" onclick="setStatusFilter('all')">
+                    Σύν <span class="stat-num" id="stat-total" style="color:var(--text)">0</span>
+                </div>
+                <div class="stat-badge" id="badge-reserved" style="color:var(--danger)" onclick="setStatusFilter('reserved')">
+                    Κρ <span class="stat-num" id="stat-occ">0</span>
+                </div>
+                <div class="stat-badge" id="badge-hotel" style="color:var(--primary)" onclick="setStatusFilter('hotel')">
+                    Ξεν <span class="stat-num" id="stat-hotel">0</span>
+                </div>
+                <div class="stat-badge" id="badge-special" style="color:var(--purple)" onclick="setStatusFilter('special')">
+                    Sp <span class="stat-num" id="stat-spec">0</span>
+                </div>
+                <div class="stat-badge" id="badge-broken" style="color:var(--warning)" onclick="setStatusFilter('broken')">
+                    Χαλ <span class="stat-num" id="stat-broken">0</span>
+                </div>
+            </div>
+            <input type="text" id="searchBar" class="search-input" placeholder="🔍 Νο ή Όνομα..." oninput="filterUmbrellas()">
+        </div>
+    </header>
+
+    <main id="main-container">
+        <div id="zoom-wrapper"></div>
+    </main>
+
+    <div class="control-bar">
+        <button class="action-btn secondary" onclick="addNewCustomUmbrella()">+ Έξτρα Ομπρέλα</button>
+        <button class="action-btn danger-clear" onclick="clearDay()">🗑 Εκκαθάριση</button>
+        <button class="action-btn primary" onclick="exportPDF()">Εξαγωγή PDF</button>
+    </div>
+
+    <script>
+        // ── PIN ──────────────────────────────────────────────────────
+        const CORRECT_PIN = '1234'; // ← ΑΛΛΑΞΕ ΤΟΝ ΚΩΔΙΚΟ ΕΔΩ
+        let pinEntered = '';
+        function pinPress(d) {
+            if (pinEntered.length >= 4) return;
+            pinEntered += d; updatePinDots();
+            if (pinEntered.length === 4) setTimeout(checkPin, 200);
+        }
+        function pinBack()  { pinEntered = pinEntered.slice(0,-1); updatePinDots(); }
+        function pinClear() { pinEntered = ''; updatePinDots(); }
+        function updatePinDots() {
+            for (let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled', i < pinEntered.length);
+        }
+        function checkPin() {
+            if (pinEntered === CORRECT_PIN) {
+                const ov = document.getElementById('pin-overlay');
+                ov.style.transition = 'opacity 0.4s'; ov.style.opacity = '0';
+                setTimeout(() => ov.style.display = 'none', 400);
+            } else {
+                const err = document.getElementById('pin-error');
+                err.classList.add('show'); setTimeout(() => err.classList.remove('show'), 2000);
+                pinEntered = ''; updatePinDots();
+            }
+        }
+
+        // ── FIREBASE ────────────────────────────────────────────────
+        const firebaseConfig = {
+            apiKey: "AIzaSyC26pjtV6oNq5E1wfRyMoXIGkRS9y9ly_g",
+            authDomain: "imperial-kratisis.firebaseapp.com",
+            databaseURL: "https://imperial-kratisis-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "imperial-kratisis",
+            storageBucket: "imperial-kratisis.firebasestorage.app",
+            messagingSenderId: "734891573148",
+            appId: "1:734891573148:web:1d9148f4234189aa209259"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let masterUmbrellasList = {};
+        let dailyBookings = {};
+        let currentZoomFactor = 1.0;
+        let activeStatusFilter = 'all';
+
+        window.onload = function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('globalDate').value = today;
+            startLiveSync();
+        };
+
+        function applyZoom(dir) {
+            if (dir === 0.0) currentZoomFactor = 1.0; else currentZoomFactor += dir;
+            if (currentZoomFactor < 0.4) currentZoomFactor = 0.4;
+            if (currentZoomFactor > 1.5) currentZoomFactor = 1.5;
+            const el = document.getElementById('zoom-wrapper');
+            el.style.transform = `scale(${currentZoomFactor})`;
+            el.style.width = `${100/currentZoomFactor}%`;
+        }
+
+        function setStatusFilter(status) {
+            activeStatusFilter = status;
+            document.querySelectorAll('.stat-badge').forEach(b => b.classList.remove('active'));
+            const map = {all:'badge-all',reserved:'badge-reserved',hotel:'badge-hotel',special:'badge-special',broken:'badge-broken'};
+            if (map[status]) document.getElementById(map[status]).classList.add('active');
+            renderDashboard();
+        }
+
+        function changeWorkingDate() { startLiveSync(); }
+
+        function startLiveSync() {
+            const selectedDate = document.getElementById('globalDate').value;
+            database.ref('master_umbrellas').on('value', (snapshot) => {
+                masterUmbrellasList = snapshot.val();
+                if (!masterUmbrellasList) {
+                    const def = {};
+                    [300,400,500,600,700].forEach(r => { for(let i=1;i<=15;i++) def[r+i]={number:r+i}; });
+                    database.ref('master_umbrellas').set(def); return;
+                }
+                database.ref('bookings_by_date/'+selectedDate).on('value', (b) => {
+                    dailyBookings = b.val() || {}; renderDashboard();
+                });
+            });
+        }
+
+        function addNewCustomUmbrella() {
+            const num = prompt("Εισάγετε τον αριθμό της νέας ομπρέλας:");
+            if (!num) return;
+            const n = parseInt(num);
+            if (isNaN(n)) return alert("Μη έγκυρος αριθμός!");
+            database.ref('master_umbrellas/'+n).set({number:n});
+        }
+
+        function deleteUmbrella(num) {
+            if (!confirm("Διαγραφή ομπρέλας "+num+" μόνιμα;")) return;
+            database.ref('master_umbrellas/'+num).remove();
+            database.ref('bookings_by_date/'+document.getElementById('globalDate').value+'/'+num).remove();
+        }
+
+        function clearDay() {
+            const d = document.getElementById('globalDate').value;
+            if (!confirm(`Εκκαθάριση ΟΛΩΝ των δεδομένων για ${d};`)) return;
+            database.ref('bookings_by_date/'+d).remove()
+                .then(()=>alert("Η παραλία καθαρίστηκε!")).catch(e=>alert("Σφάλμα: "+e));
+        }
+
+        function renderDashboard() {
+            const wrapper = document.getElementById('zoom-wrapper');
+            wrapper.innerHTML = '';
+
+            let total=0, occ=0, hotel=0, spec=0, broken=0;
+            const sorted = Object.keys(masterUmbrellasList).sort((a,b)=>parseInt(a)-parseInt(b));
+
+            sorted.forEach(num => {
+                const b = dailyBookings[num] || {status:'free'};
+                if (b.status==='reserved') occ++;
+                else if (b.status==='hotel') hotel++;
+                else if (b.status==='special') spec++;
+                else if (b.status==='broken') broken++;
+                total++;
+            });
+
+            const grouped = {};
+            sorted.forEach(numStr => {
+                const row = Math.floor(parseInt(numStr)/100)*100;
+                const b = dailyBookings[numStr] || {status:'free'};
+                if (activeStatusFilter !== 'all' && b.status !== activeStatusFilter) return;
+                if (!grouped[row]) grouped[row] = [];
+                grouped[row].push(numStr);
+            });
+
+            Object.keys(grouped).sort((a,b)=>parseInt(a)-parseInt(b)).forEach(rowKey => {
+                if (!grouped[rowKey].length) return;
+                const section = document.createElement('div');
+                section.className = 'beach-row-section';
+
+                const label = document.createElement('div');
+                label.className = 'row-label';
+                label.textContent = `ΣΕΙΡΑ ${rowKey}`;
+                section.appendChild(label);
+
+                const container = document.createElement('div');
+                container.className = 'row-cards-container';
+
+                grouped[rowKey].forEach(num => {
+                    const b = dailyBookings[num] || {status:'free'};
+
+                    // Χρώματα — έντονα και γεμάτα
+                    let fillColor, textColor, bgTint;
+                    switch(b.status) {
+                        case 'reserved': fillColor='#ef233c'; textColor='#fff';    bgTint='#fff1f2'; break;
+                        case 'hotel':    fillColor='#1a6bff'; textColor='#fff';    bgTint='#eff6ff'; break;
+                        case 'special':  fillColor='#7c3aed'; textColor='#fff';    bgTint='#f5f3ff'; break;
+                        case 'broken':   fillColor='#f59e0b'; textColor='#1e293b'; bgTint='#fffbeb'; break;
+                        default:         fillColor='#94a3b8'; textColor='#1e293b'; bgTint='#f8fafc';
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = 'umbrella-card';
+                    card.setAttribute('data-status', b.status);
+                    card.setAttribute('data-number', num);
+                    card.setAttribute('data-name', (b.name||'').toLowerCase());
+                    card.style.background = bgTint;
+
+                    card.innerHTML = `
+                        <button class="delete-icon" onclick="deleteUmbrella('${num}')">&times;</button>
+                        <div class="icon-box">
+                            <span class="umb-number-badge" style="color:${textColor};">${num}</span>
+                            <svg class="umbrella-svg" viewBox="0 0 100 100">
+                                <!-- Ομπρέλα γεμάτη με έντονο χρώμα -->
+                                <path d="M 10 52 Q 50 5 90 52 Z" fill="${fillColor}"/>
+                                <!-- Φωτεινή λεπτομέρεια πάνω -->
+                                <path d="M 10 52 Q 50 5 90 52" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+                                <!-- Ανταύγεια στην κορυφή -->
+                                <path d="M 30 38 Q 50 12 70 38" fill="rgba(255,255,255,0.18)" />
+                                <!-- Βάση / κοτσάνι -->
+                                <rect x="48" y="52" width="4" height="38" fill="#334155" rx="2"/>
+                                <!-- Κάμψη στην άκρη -->
+                                <path d="M 44 88 Q 50 96 56 88" stroke="#334155" stroke-width="3" fill="none" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="inputs-form">
+                            <input type="text" class="input-field" placeholder="Όνομα"      value="${b.name||''}"  onchange="updateField('${num}','name',this.value)">
+                            <input type="text" class="input-field" placeholder="Τηλέφωνο"  value="${b.phone||''}" onchange="updateField('${num}','phone',this.value)">
+                            <input type="text" class="input-field" placeholder="Ώρα"        value="${b.time||''}"  onchange="updateField('${num}','time',this.value)">
+                            <input type="text" class="input-field" placeholder="Σημειώσεις" value="${b.notes||''}" onchange="updateField('${num}','notes',this.value)">
+                        </div>
+                        <div class="status-row">
+                            <button class="status-dot-btn free-btn   ${b.status==='free'    ?'active':''}" onclick="setStatus('${num}','free')">Διαθ.</button>
+                            <button class="status-dot-btn res-btn    ${b.status==='reserved'?'active':''}" onclick="setStatus('${num}','reserved')">Κρ.</button>
+                            <button class="status-dot-btn hotel-btn  ${b.status==='hotel'   ?'active':''}" onclick="setStatus('${num}','hotel')">Ξεν.</button>
+                            <button class="status-dot-btn spec-btn   ${b.status==='special' ?'active':''}" onclick="setStatus('${num}','special')">Sp.</button>
+                            <button class="status-dot-btn broken-btn ${b.status==='broken'  ?'active':''}" onclick="setStatus('${num}','broken')">Χαλ.</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                section.appendChild(container);
+                wrapper.appendChild(section);
+            });
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-occ').innerText = occ;
+            document.getElementById('stat-hotel').innerText = hotel;
+            document.getElementById('stat-spec').innerText = spec;
+            document.getElementById('stat-broken').innerText = broken;
+        }
+
+        function updateField(num, field, val) {
+            database.ref('bookings_by_date/'+document.getElementById('globalDate').value+'/'+num).update({[field]:val});
+        }
+        function setStatus(num, status) {
+            database.ref('bookings_by_date/'+document.getElementById('globalDate').value+'/'+num).update({status});
+        }
+        function filterUmbrellas() {
+            const q = document.getElementById('searchBar').value.toLowerCase().trim();
+            document.querySelectorAll('.umbrella-card').forEach(c => {
+                const n = c.getAttribute('data-number'), nm = c.getAttribute('data-name');
+                c.style.display = (!q || n.includes(q) || nm.includes(q)) ? 'flex' : 'none';
+            });
+        }
+        function exportPDF() {
+            const d = document.getElementById('globalDate').value;
+            html2pdf().set({
+                margin:10, filename:'imperial_beach_'+d+'.pdf',
+                image:{type:'jpeg',quality:0.98},
+                html2canvas:{scale:2,useCORS:true},
+                jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}
+            }).from(document.getElementById('zoom-wrapper')).save();
+        }
+    </script>
+</body>
+</html>
