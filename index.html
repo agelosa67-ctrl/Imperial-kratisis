@@ -180,6 +180,10 @@
                 display: contents;
             }
             .stats-container { flex-wrap: nowrap; }
+            /* Κάρτες: πάντα οριζόντιο scroll, ποτέ wrap */
+            .row-cards-container {
+                flex-wrap: nowrap !important;
+            }
         }
 
         /* ── MAIN ── */
@@ -197,7 +201,7 @@
             margin-bottom: 8px; padding-left: 2px;
         }
         .row-cards-container {
-            display: flex; flex-wrap: nowrap; gap: 8px;
+            display: flex; flex-wrap: nowrap !important; gap: 8px;
             overflow-x: auto; padding-bottom: 6px;
         }
         .row-cards-container::-webkit-scrollbar { height: 4px; }
