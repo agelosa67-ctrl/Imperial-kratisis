@@ -348,6 +348,42 @@
         .ov-legend-item { display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 600; color: var(--muted); }
         .ov-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
+        /* ── STATUS POPUP ── */
+        #status-popup {
+            display: none; position: fixed; inset: 0;
+            background: rgba(15,23,42,0.5); backdrop-filter: blur(4px);
+            z-index: 500; align-items: flex-end; justify-content: center;
+        }
+        #status-popup.open { display: flex; }
+        .status-popup-card {
+            background: #fff; border-radius: 20px 20px 0 0;
+            padding: 20px 20px 36px;
+            width: 100%; max-width: 480px;
+            animation: slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .status-popup-title {
+            font-size: 18px; font-weight: 800; text-align: center;
+            margin-bottom: 16px; color: var(--text);
+        }
+        .status-popup-btns {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .sp-btn {
+            padding: 16px 8px; border: 2px solid transparent;
+            border-radius: 14px; font-size: 15px; font-weight: 800;
+            cursor: pointer; font-family: 'DM Sans', sans-serif;
+            transition: all 0.15s; text-align: center;
+        }
+        .sp-btn:active { transform: scale(0.95); }
+        .sp-free     { background: #dcfce7; color: #16a34a; border-color: #86efac; }
+        .sp-reserved { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+        .sp-hotel    { background: #dbeafe; color: #1d6fe8; border-color: #93c5fd; }
+        .sp-special  { background: #ede9fe; color: #7c3aed; border-color: #c4b5fd; }
+        .sp-broken   { background: #fef3c7; color: #d97706; border-color: #fcd34d; }
+        .sp-close    { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; grid-column: 1/-1; }
+
         /* ── CONFIRM MODAL ── */
         #confirm-modal {
             display: none; position: fixed; inset: 0;
@@ -381,6 +417,28 @@
 </head>
 <body>
 
+
+    <!-- STATUS POPUP -->
+    <div id="status-popup" onclick="if(event.target===this)closeStatusPopup()">
+        <div class="status-popup-card">
+            <div class="status-popup-title" id="status-popup-title">Ομπρέλα 000</div>
+            <!-- Fields -->
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+                <input id="sp-name"  type="text" placeholder="Όνομα"      style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;" oninput="updatePopupField('name',this.value)">
+                <input id="sp-time"  type="text" placeholder="Ώρα"        style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;" oninput="updatePopupField('time',this.value)">
+                <input id="sp-notes" type="text" placeholder="Σημειώσεις" style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;" oninput="updatePopupField('notes',this.value)">
+            </div>
+            <!-- Status buttons -->
+            <div class="status-popup-btns">
+                <button class="sp-btn sp-free"     onclick="setStatusFromPopup('free')">✅ Διαθέσιμο</button>
+                <button class="sp-btn sp-reserved" onclick="setStatusFromPopup('reserved')">🔴 Κρατημένο</button>
+                <button class="sp-btn sp-hotel"    onclick="setStatusFromPopup('hotel')">🏨 Ξενοδοχείο</button>
+                <button class="sp-btn sp-special"  onclick="setStatusFromPopup('special')">⭐ Special</button>
+                <button class="sp-btn sp-broken"   onclick="setStatusFromPopup('broken')">🔧 Χαλασμένο</button>
+                <button class="sp-btn sp-close"    onclick="closeStatusPopup()">✕ Κλείσιμο</button>
+            </div>
+        </div>
+    </div>
 
     <!-- CONFIRM MODAL -->
     <div id="confirm-modal">
@@ -548,6 +606,31 @@
 
         let masterUmbrellasList = {};
         let overviewOpen = false;
+        let popupCurrentNum = null;
+
+        function openStatusPopup(num) {
+            popupCurrentNum = num;
+            document.getElementById('status-popup-title').textContent = 'Ομπρέλα ' + num;
+            const b = (dailyBookings || {})[num] || {};
+            document.getElementById('sp-name').value  = b.name  || '';
+            document.getElementById('sp-time').value  = b.time  || '';
+            document.getElementById('sp-notes').value = b.notes || '';
+            document.getElementById('status-popup').classList.add('open');
+        }
+
+        function updatePopupField(field, value) {
+            if (!popupCurrentNum) return;
+            updateField(popupCurrentNum, field, value);
+        }
+        function closeStatusPopup() {
+            document.getElementById('status-popup').classList.remove('open');
+            popupCurrentNum = null;
+        }
+        function setStatusFromPopup(status) {
+            if (!popupCurrentNum) return;
+            setStatus(popupCurrentNum, status);
+            closeStatusPopup();
+        }
 
         function toggleOverview() {
             overviewOpen = !overviewOpen;
@@ -738,7 +821,7 @@
 
                     card.innerHTML = `
                         <button class="delete-icon" onclick="deleteUmbrella('${num}')">&times;</button>
-                        <div class="icon-box">
+                        <div class="icon-box" onclick="openStatusPopup(${num})" style="cursor:pointer">
                             <span class="umb-number-badge" style="color:${textColor};">${num}</span>
                             <svg class="umbrella-svg" viewBox="0 0 100 100">
                                 <!-- Ομπρέλα γεμάτη με έντονο χρώμα -->
@@ -758,17 +841,7 @@
                             <input type="text" class="input-field" placeholder="Ώρα"        value="${b.time||''}"  onchange="updateField('${num}','time',this.value)">
                             <input type="text" class="input-field" placeholder="Σημειώσεις" value="${b.notes||''}" onchange="updateField('${num}','notes',this.value)">
                         </div>
-                        <div class="status-row">
-                            <div class="status-row-inner">
-                                <button class="status-dot-btn free-btn   ${b.status==='free'    ?'active':''}" onclick="setStatus('${num}','free')">Διαθ</button>
-                                <button class="status-dot-btn res-btn    ${b.status==='reserved'?'active':''}" onclick="setStatus('${num}','reserved')">Κρ</button>
-                                <button class="status-dot-btn hotel-btn  ${b.status==='hotel'   ?'active':''}" onclick="setStatus('${num}','hotel')">Ξεν</button>
-                            </div>
-                            <div class="status-row-inner">
-                                <button class="status-dot-btn spec-btn   ${b.status==='special' ?'active':''}" onclick="setStatus('${num}','special')">Sp</button>
-                                <button class="status-dot-btn broken-btn ${b.status==='broken'  ?'active':''}" onclick="setStatus('${num}','broken')">Χαλ</button>
-                            </div>
-                        </div>
+
                     `;
                     container.appendChild(card);
                 });
