@@ -526,7 +526,7 @@
                 masterUmbrellasList = snapshot.val();
                 if (!masterUmbrellasList) {
                     const def = {};
-                    [300,400,500,600,700].forEach(r => { for(let i=1;i<=15;i++) def[r+i]={number:r+i}; });
+                    [100,200,300,400,500,600,700,800,900].forEach(r => { for(let i=1;i<=23;i++) def[r+i]={number:r+i}; });
                     database.ref('master_umbrellas').set(def); return;
                 }
                 database.ref('bookings_by_date/'+selectedDate).on('value', (b) => {
