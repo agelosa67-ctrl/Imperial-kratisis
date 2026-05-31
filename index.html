@@ -99,8 +99,10 @@
         }
         .header-row1 {
             display: flex; align-items: center;
-            justify-content: space-between; gap: 6px; flex-wrap: nowrap; width: 100%;
+            justify-content: space-between; gap: 8px; flex-wrap: nowrap; width: 100%;
+            overflow: hidden;
         }
+        .header-row1 .header-action-btns { flex: 1; justify-content: center; }
         .header-row2 {
             display: flex; align-items: center;
             gap: 5px; flex-wrap: nowrap;
@@ -143,7 +145,7 @@
             padding: 4px 8px; border-radius: 10px; flex-shrink: 0;
         }
         .date-picker-wrapper label { font-size: 10px; font-weight: 600; color: var(--muted); }
-        .date-input { border: none; background: transparent; font-size: 11px; font-weight: 700; outline: none; color: var(--text); cursor: pointer; }
+        .date-input { border: none; background: transparent; font-size: 11px; font-weight: 700; outline: none; color: var(--text); cursor: pointer; max-width: 120px; }
 
         .stats-container { display: flex; flex-wrap: nowrap; gap: 3px; flex-shrink: 0; }
         .stat-badge {
@@ -191,9 +193,9 @@
         .umbrella-card {
             background: var(--surface);
             border-radius: 16px;
-            padding: 8px 8px 8px;
+            padding: 8px 6px 8px;
             border: 2px solid var(--border);
-            flex: 0 0 124px;
+            flex: 0 0 118px;
             display: flex; flex-direction: column; align-items: center;
             position: relative;
             transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
@@ -246,15 +248,16 @@
 
         /* Status buttons */
         .status-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            width: 100%; gap: 4px;
-            margin-top: 8px; border-top: 1px solid #f1f5f9;
-            padding-top: 6px;
+            display: flex;
+            flex-direction: row;
+            width: 100%; gap: 3px;
+            margin-top: 6px; border-top: 1px solid #f1f5f9;
+            padding-top: 5px;
         }
         .status-dot-btn {
-            border: 1.5px solid #e2e8f0; padding: 7px 2px; border-radius: 8px;
-            cursor: pointer; font-size: 10px; font-weight: 700;
+            flex: 1;
+            border: 1.5px solid #e2e8f0; padding: 5px 1px; border-radius: 7px;
+            cursor: pointer; font-size: 9px; font-weight: 700;
             text-align: center; background: #f8fafc; color: #94a3b8;
             transition: all 0.15s; font-family: 'DM Sans', sans-serif;
             line-height: 1;
@@ -269,10 +272,10 @@
         /* ── HEADER ACTION BUTTONS ── */
         .header-action-btns { display: flex; align-items: center; gap: 4px; }
         .hdr-btn {
-            padding: 5px 10px; border: none; border-radius: 8px;
-            font-size: 11px; font-weight: 700; cursor: pointer;
+            padding: 5px 8px; border: none; border-radius: 8px;
+            font-size: 12px; font-weight: 700; cursor: pointer;
             font-family: 'DM Sans', sans-serif; transition: all 0.15s;
-            white-space: nowrap;
+            white-space: nowrap; min-width: 32px; text-align: center;
         }
         .hdr-btn.primary { background: var(--primary); color: white; }
         .hdr-btn.primary:hover { background: #1558d6; }
@@ -371,9 +374,9 @@
                 <button class="zoom-btn" onclick="applyZoom(0.1)">+</button>
             </div>
             <div class="header-action-btns">
-                <button class="hdr-btn secondary" onclick="addNewCustomUmbrella()">+ Ομπρέλα</button>
-                <button class="hdr-btn danger-clear" onclick="clearDay()">🗑 Εκκαθάριση</button>
-                <button class="hdr-btn primary" onclick="exportPDF()">📄 PDF</button>
+                <button class="hdr-btn secondary" onclick="addNewCustomUmbrella()">+</button>
+                <button class="hdr-btn danger-clear" onclick="clearDay()">🗑</button>
+                <button class="hdr-btn primary" onclick="exportPDF()">PDF</button>
             </div>
             <div class="date-picker-wrapper">
                 <label>Ημ:</label>
