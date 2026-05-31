@@ -208,23 +208,6 @@
         .row-cards-container::-webkit-scrollbar-track { background: transparent; }
         .row-cards-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        /* Tablet & desktop: wrap cards to fill full width */
-        @media (min-width: 700px) {
-            .row-cards-container {
-                flex-wrap: wrap;
-                overflow-x: visible;
-            }
-            .umbrella-card {
-                flex: 0 0 calc(10% - 8px);
-                min-width: 100px;
-            }
-        }
-        @media (min-width: 1100px) {
-            .umbrella-card {
-                flex: 0 0 calc(8% - 8px);
-                min-width: 110px;
-            }
-        }
 
         /* ── UMBRELLA CARD ── */
         .umbrella-card {
