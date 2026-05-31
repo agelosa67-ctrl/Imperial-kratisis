@@ -169,20 +169,22 @@
         }
         .search-input:focus { border-color: var(--primary); background: #fff; }
 
-        /* ── TABLET: single row header ── */
-        @media (min-width: 600px) {
+        /* ── TABLET/DESKTOP: single row header ── */
+        @media (min-width: 700px) {
             header {
-                flex-direction: row !important;
+                flex-direction: row;
                 align-items: center;
                 padding: 5px 14px;
+                gap: 10px;
             }
-            .header-row1, .header-row2 {
-                display: contents;
+            .header-row1 {
+                flex: 0 0 auto;
+                width: auto;
+                overflow: visible;
             }
-            .stats-container { flex-wrap: nowrap; }
-            /* Κάρτες: πάντα οριζόντιο scroll, ποτέ wrap */
-            .row-cards-container {
-                flex-wrap: nowrap !important;
+            .header-row2 {
+                flex: 1;
+                min-width: 0;
             }
         }
 
