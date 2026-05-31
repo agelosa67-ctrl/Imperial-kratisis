@@ -90,12 +90,13 @@
         /* ── HEADER ── */
         header {
             background: var(--surface);
-            padding: 10px 16px;
+            padding: 8px 12px;
             display: flex; flex-wrap: wrap;
             justify-content: space-between; align-items: center;
-            gap: 10px; z-index: 10;
+            gap: 6px; z-index: 10;
             border-bottom: 1px solid var(--border);
             box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+            flex-shrink: 0;
         }
         .logo-area h1 {
             margin: 0; font-family: 'Bebas Neue', sans-serif;
@@ -156,7 +157,7 @@
         .search-input:focus { border-color: var(--primary); background: #fff; }
 
         /* ── MAIN ── */
-        #main-container { flex: 1; overflow: auto; padding: 12px 16px; }
+        #main-container { flex: 1; overflow: auto; padding: 12px 16px; min-height: 0; }
         #zoom-wrapper {
             transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             transform-origin: top left; width: 100%;
@@ -261,6 +262,7 @@
             background: var(--surface); padding: 10px 16px;
             display: flex; justify-content: center; flex-wrap: wrap; gap: 8px;
             border-top: 1px solid var(--border);
+            flex-shrink: 0;
         }
         .action-btn {
             padding: 8px 18px; border: none; border-radius: 10px;
@@ -273,9 +275,53 @@
         .action-btn.secondary:hover { background: #e2e8f0; }
         .action-btn.danger-clear { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
         .action-btn.danger-clear:hover { background: #fecaca; }
+
+        /* ── CONFIRM MODAL ── */
+        #confirm-modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(15,23,42,0.55); backdrop-filter: blur(4px);
+            z-index: 900; align-items: center; justify-content: center;
+        }
+        #confirm-modal.open { display: flex; }
+        .confirm-card {
+            background: #fff; border-radius: 20px;
+            padding: 32px 28px 24px;
+            max-width: 320px; width: 90%;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            animation: popIn 0.2s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .confirm-icon { font-size: 44px; line-height: 1; }
+        .confirm-title { font-size: 17px; font-weight: 700; color: var(--text); text-align: center; margin: 0; }
+        .confirm-sub { font-size: 13px; color: var(--muted); text-align: center; margin: 0; }
+        .confirm-btns { display: flex; gap: 10px; width: 100%; margin-top: 8px; }
+        .confirm-btns button {
+            flex: 1; padding: 12px; border: none; border-radius: 12px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+        }
+        .confirm-cancel { background: #f1f5f9; color: var(--muted); }
+        .confirm-cancel:hover { background: #e2e8f0; }
+        .confirm-ok { background: var(--danger); color: #fff; }
+        .confirm-ok:hover { background: #c81a2e; }
     </style>
 </head>
 <body>
+
+
+    <!-- CONFIRM MODAL -->
+    <div id="confirm-modal">
+        <div class="confirm-card">
+            <div class="confirm-icon">🗑️</div>
+            <p class="confirm-title" id="confirm-title">Εκκαθάριση ημέρας;</p>
+            <p class="confirm-sub" id="confirm-sub">Θα διαγραφούν ΟΛΕΣ οι κρατήσεις της ημέρας. Δεν υπάρχει αναίρεση.</p>
+            <div class="confirm-btns">
+                <button class="confirm-cancel" onclick="closeConfirm()">Ακύρωση</button>
+                <button class="confirm-ok" id="confirm-ok-btn">Διαγραφή</button>
+            </div>
+        </div>
+    </div>
 
     <div id="pin-overlay">
         <div class="pin-logo">
@@ -329,6 +375,9 @@
             <div class="stats-container">
                 <div class="stat-badge active" id="badge-all" onclick="setStatusFilter('all')">
                     Σύν <span class="stat-num" id="stat-total" style="color:var(--text)">0</span>
+                </div>
+                <div class="stat-badge" id="badge-free" style="color:#16a34a" onclick="setStatusFilter('free')">
+                    Διαθ <span class="stat-num" id="stat-free">0</span>
                 </div>
                 <div class="stat-badge" id="badge-reserved" style="color:var(--danger)" onclick="setStatusFilter('reserved')">
                     Κρ <span class="stat-num" id="stat-occ">0</span>
@@ -433,7 +482,7 @@
         function setStatusFilter(status) {
             activeStatusFilter = status;
             document.querySelectorAll('.stat-badge').forEach(b => b.classList.remove('active'));
-            const map = {all:'badge-all',reserved:'badge-reserved',hotel:'badge-hotel',special:'badge-special',broken:'badge-broken'};
+            const map = {all:'badge-all',free:'badge-free',reserved:'badge-reserved',hotel:'badge-hotel',special:'badge-special',broken:'badge-broken'};
             if (map[status]) document.getElementById(map[status]).classList.add('active');
             renderDashboard();
         }
@@ -471,16 +520,39 @@
 
         function clearDay() {
             const d = document.getElementById('globalDate').value;
-            if (!confirm(`Εκκαθάριση ΟΛΩΝ των δεδομένων για ${d};`)) return;
-            database.ref('bookings_by_date/'+d).remove()
-                .then(()=>alert("Η παραλία καθαρίστηκε!")).catch(e=>alert("Σφάλμα: "+e));
+            showConfirm(
+                '🗑️ Εκκαθάριση ' + d + ';',
+                'Θα διαγραφούν ΟΛΕΣ οι κρατήσεις. Δεν υπάρχει αναίρεση.',
+                () => {
+                    database.ref('bookings_by_date/'+d).remove()
+                        .then(()=>{ closeConfirm(); })
+                        .catch(e=>{ closeConfirm(); alert("Σφάλμα: "+e); });
+                }
+            );
         }
+
+        let confirmCallback = null;
+        function showConfirm(title, sub, onOk) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-sub').textContent = sub;
+            confirmCallback = onOk;
+            document.getElementById('confirm-ok-btn').onclick = () => { if(confirmCallback) confirmCallback(); };
+            document.getElementById('confirm-modal').classList.add('open');
+        }
+        function closeConfirm() {
+            document.getElementById('confirm-modal').classList.remove('open');
+            confirmCallback = null;
+        }
+        // Close on backdrop click
+        document.getElementById('confirm-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeConfirm();
+        });
 
         function renderDashboard() {
             const wrapper = document.getElementById('zoom-wrapper');
             wrapper.innerHTML = '';
 
-            let total=0, occ=0, hotel=0, spec=0, broken=0;
+            let total=0, occ=0, hotel=0, spec=0, broken=0, free=0;
             const sorted = Object.keys(masterUmbrellasList).sort((a,b)=>parseInt(a)-parseInt(b));
 
             sorted.forEach(num => {
@@ -489,6 +561,7 @@
                 else if (b.status==='hotel') hotel++;
                 else if (b.status==='special') spec++;
                 else if (b.status==='broken') broken++;
+                else free++;
                 total++;
             });
 
@@ -573,6 +646,7 @@
             });
 
             document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-free').innerText = free;
             document.getElementById('stat-occ').innerText = occ;
             document.getElementById('stat-hotel').innerText = hotel;
             document.getElementById('stat-spec').innerText = spec;
