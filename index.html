@@ -191,8 +191,11 @@
         /* ── MAIN ── */
         #main-container { flex: 1; overflow: auto; padding: 12px 16px; min-height: 0; }
         #zoom-wrapper {
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            transform-origin: top left; width: 100%;
+            transform-origin: top left;
+            width: 100%;
+        }
+        #zoom-outer {
+            overflow: hidden;
         }
 
         /* ── ROW ── */
@@ -472,7 +475,9 @@
     </header>
 
     <main id="main-container">
-        <div id="zoom-wrapper"></div>
+        <div id="zoom-outer">
+            <div id="zoom-wrapper"></div>
+        </div>
     </main>
 
 
@@ -586,11 +591,16 @@
 
         function applyZoom(dir) {
             if (dir === 0.0) currentZoomFactor = 1.0;
-            else currentZoomFactor = Math.min(2.0, Math.max(0.3, currentZoomFactor + dir));
+            else currentZoomFactor = Math.min(2.0, Math.max(0.3, Math.round((currentZoomFactor + dir) * 10) / 10));
             const el = document.getElementById('zoom-wrapper');
-            el.style.transform = `scale(${currentZoomFactor})`;
-            el.style.width = `${100/currentZoomFactor}%`;
-            document.getElementById('zoom-label').textContent = Math.round(currentZoomFactor*100) + '%';
+            const s = currentZoomFactor;
+            el.style.transform = `scale(${s})`;
+            el.style.width = `${100/s}%`;
+            // Fix the gap: set outer height to match scaled content
+            requestAnimationFrame(() => {
+                document.getElementById('zoom-outer').style.height = Math.ceil(el.scrollHeight * s) + 'px';
+            });
+            document.getElementById('zoom-label').textContent = Math.round(s*100) + '%';
         }
 
         // Πάτα το % για reset στο 100%
