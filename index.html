@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Imperial Beach Management</title>
@@ -270,19 +270,19 @@
 
         /* Status buttons */
         .status-row {
-            display: flex;
-            flex-direction: row;
-            width: 100%; gap: 3px;
-            margin-top: 6px; border-top: 1px solid #f1f5f9;
-            padding-top: 5px;
+            display: flex; flex-direction: column;
+            width: 100%; gap: 2px;
+            margin-top: 4px; border-top: 1px solid #f1f5f9;
+            padding-top: 4px;
         }
+        .status-row-inner { display: flex; gap: 2px; width: 100%; }
         .status-dot-btn {
             flex: 1;
-            border: 1.5px solid #e2e8f0; padding: 5px 1px; border-radius: 7px;
-            cursor: pointer; font-size: 9px; font-weight: 700;
+            border: 1px solid #e2e8f0; padding: 3px 0; border-radius: 5px;
+            cursor: pointer; font-size: 7.5px; font-weight: 700;
             text-align: center; background: #f8fafc; color: #94a3b8;
             transition: all 0.15s; font-family: 'DM Sans', sans-serif;
-            line-height: 1;
+            line-height: 1; white-space: nowrap;
         }
         .status-dot-btn:active { transform: scale(0.93); }
         .status-dot-btn.free-btn.active   { background: #dcfce7; color: #16a34a;        border-color: #16a34a; }
@@ -305,6 +305,45 @@
         .hdr-btn.secondary:hover { background: #e2e8f0; }
         .hdr-btn.danger-clear { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; font-size: 13px; }
         .hdr-btn.danger-clear:hover { background: #fecaca; }
+        .hdr-btn.overview-btn { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; }
+        .hdr-btn.overview-btn.active { background: var(--primary); color: #fff; }
+
+        /* ── OVERVIEW PANEL ── */
+        #overview-panel {
+            display: none; position: fixed; inset: 0;
+            background: var(--bg); z-index: 200; overflow: auto; padding: 10px;
+        }
+        #overview-panel.open { display: block; }
+        .overview-topbar {
+            position: sticky; top: 0; background: var(--surface);
+            border-radius: 10px; padding: 8px 12px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); z-index: 10;
+        }
+        .overview-topbar h3 { margin: 0; font-size: 13px; font-weight: 700; }
+        .overview-topbar button {
+            background: var(--danger); color: #fff; border: none;
+            border-radius: 7px; padding: 5px 12px; font-size: 12px;
+            font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif;
+        }
+        .ov-row { margin-bottom: 8px; }
+        .ov-row-label { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 1px; margin-bottom: 3px; }
+        .ov-cells { display: flex; flex-wrap: wrap; gap: 2px; }
+        .ov-cell {
+            width: 34px; height: 34px; border-radius: 5px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 8px; font-weight: 800; cursor: pointer;
+            border: 1px solid transparent; transition: transform 0.1s; text-align: center;
+        }
+        .ov-cell:active { transform: scale(0.9); }
+        .ov-free     { background: #f0fdf4; border-color: #86efac; color: #16a34a; }
+        .ov-reserved { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+        .ov-hotel    { background: #eff6ff; border-color: #93c5fd; color: #1d6fe8; }
+        .ov-special  { background: #faf5ff; border-color: #c4b5fd; color: #7c3aed; }
+        .ov-broken   { background: #fffbeb; border-color: #fcd34d; color: #d97706; }
+        .ov-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+        .ov-legend-item { display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 600; color: var(--muted); }
+        .ov-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
         /* ── CONFIRM MODAL ── */
         #confirm-modal {
@@ -398,7 +437,8 @@
             <div class="header-action-btns">
                 <button class="hdr-btn secondary" onclick="addNewCustomUmbrella()">+</button>
                 <button class="hdr-btn danger-clear" onclick="clearDay()">🗑</button>
-                <button class="hdr-btn primary" onclick="exportPDF()">PDF</button>
+                <button class="hdr-btn overview-btn" id="overview-btn" onclick="toggleOverview()">🗺</button>
+
             </div>
             <div class="date-picker-wrapper">
                 <label>Ημ:</label>
@@ -436,6 +476,22 @@
     </main>
 
 
+
+    <!-- OVERVIEW PANEL -->
+    <div id="overview-panel">
+        <div class="overview-topbar">
+            <h3>🗺 Χάρτης Παραλίας</h3>
+            <button onclick="toggleOverview()">✕ Κλείσιμο</button>
+        </div>
+        <div class="ov-legend">
+            <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#86efac"></div>Διαθ</div>
+            <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#fca5a5"></div>Κρατ</div>
+            <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#93c5fd"></div>Ξεν</div>
+            <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#c4b5fd"></div>Sp</div>
+            <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#fcd34d"></div>Χαλ</div>
+        </div>
+        <div id="overview-content"></div>
+    </div>
 
     <script>
         // ── PIN ──────────────────────────────────────────────────────
@@ -486,6 +542,38 @@
         const database = firebase.database();
 
         let masterUmbrellasList = {};
+        let overviewOpen = false;
+
+        function toggleOverview() {
+            overviewOpen = !overviewOpen;
+            document.getElementById('overview-panel').classList.toggle('open', overviewOpen);
+            document.getElementById('overview-btn').classList.toggle('active', overviewOpen);
+            if (overviewOpen) renderOverview();
+        }
+
+        function renderOverview() {
+            const bk = (typeof dailyBookings !== 'undefined' ? dailyBookings : null) || {};
+            const umb = Object.values(masterUmbrellasList || {}).sort((a,b) => a.number - b.number);
+            const rows = {};
+            umb.forEach(u => {
+                const r = Math.floor(u.number / 100) * 100;
+                if (!rows[r]) rows[r] = [];
+                rows[r].push(u);
+            });
+            const cls = { free:'ov-free', reserved:'ov-reserved', hotel:'ov-hotel', special:'ov-special', broken:'ov-broken' };
+            let html = '';
+            Object.keys(rows).sort((a,b)=>a-b).forEach(r => {
+                html += `<div class="ov-row"><div class="ov-row-label">ΣΕΙΡΑ ${r}</div><div class="ov-cells">`;
+                rows[r].forEach(u => {
+                    const b = bk[u.number] || {};
+                    const st = b.status || 'free';
+                    const lbl = b.name ? b.name.substring(0,5) : u.number;
+                    html += `<div class="ov-cell ${cls[st]||'ov-free'}" onclick="toggleOverview()">${lbl}</div>`;
+                });
+                html += `</div></div>`;
+            });
+            document.getElementById('overview-content').innerHTML = html || '<p style="color:var(--muted);text-align:center;padding:20px">Φόρτωση...</p>';
+        }
         let dailyBookings = {};
         let currentZoomFactor = 1.0;
         let activeStatusFilter = 'all';
@@ -657,16 +745,19 @@
                         </div>
                         <div class="inputs-form">
                             <input type="text" class="input-field" placeholder="Όνομα"      value="${b.name||''}"  onchange="updateField('${num}','name',this.value)">
-                            <input type="text" class="input-field" placeholder="Τηλέφωνο"  value="${b.phone||''}" onchange="updateField('${num}','phone',this.value)">
                             <input type="text" class="input-field" placeholder="Ώρα"        value="${b.time||''}"  onchange="updateField('${num}','time',this.value)">
                             <input type="text" class="input-field" placeholder="Σημειώσεις" value="${b.notes||''}" onchange="updateField('${num}','notes',this.value)">
                         </div>
                         <div class="status-row">
-                            <button class="status-dot-btn free-btn   ${b.status==='free'    ?'active':''}" onclick="setStatus('${num}','free')">Διαθ.</button>
-                            <button class="status-dot-btn res-btn    ${b.status==='reserved'?'active':''}" onclick="setStatus('${num}','reserved')">Κρ.</button>
-                            <button class="status-dot-btn hotel-btn  ${b.status==='hotel'   ?'active':''}" onclick="setStatus('${num}','hotel')">Ξεν.</button>
-                            <button class="status-dot-btn spec-btn   ${b.status==='special' ?'active':''}" onclick="setStatus('${num}','special')">Sp.</button>
-                            <button class="status-dot-btn broken-btn ${b.status==='broken'  ?'active':''}" onclick="setStatus('${num}','broken')">Χαλ.</button>
+                            <div class="status-row-inner">
+                                <button class="status-dot-btn free-btn   ${b.status==='free'    ?'active':''}" onclick="setStatus('${num}','free')">Διαθ</button>
+                                <button class="status-dot-btn res-btn    ${b.status==='reserved'?'active':''}" onclick="setStatus('${num}','reserved')">Κρ</button>
+                                <button class="status-dot-btn hotel-btn  ${b.status==='hotel'   ?'active':''}" onclick="setStatus('${num}','hotel')">Ξεν</button>
+                            </div>
+                            <div class="status-row-inner">
+                                <button class="status-dot-btn spec-btn   ${b.status==='special' ?'active':''}" onclick="setStatus('${num}','special')">Sp</button>
+                                <button class="status-dot-btn broken-btn ${b.status==='broken'  ?'active':''}" onclick="setStatus('${num}','broken')">Χαλ</button>
+                            </div>
                         </div>
                     `;
                     container.appendChild(card);
