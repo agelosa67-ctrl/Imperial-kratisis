@@ -257,24 +257,20 @@
         .status-dot-btn.spec-btn.active   { background: #ede9fe; color: var(--purple);  border-color: var(--purple); }
         .status-dot-btn.broken-btn.active { background: #fef3c7; color: #d97706;        border-color: #d97706; }
 
-        /* ── FOOTER ── */
-        .control-bar {
-            background: var(--surface); padding: 10px 16px;
-            display: flex; justify-content: center; flex-wrap: wrap; gap: 8px;
-            border-top: 1px solid var(--border);
-            flex-shrink: 0;
-        }
-        .action-btn {
-            padding: 8px 18px; border: none; border-radius: 10px;
-            font-size: 12px; font-weight: 600; cursor: pointer;
+        /* ── HEADER ACTION BUTTONS ── */
+        .header-action-btns { display: flex; align-items: center; gap: 4px; }
+        .hdr-btn {
+            padding: 5px 10px; border: none; border-radius: 8px;
+            font-size: 11px; font-weight: 700; cursor: pointer;
             font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+            white-space: nowrap;
         }
-        .action-btn.primary { background: var(--primary); color: white; }
-        .action-btn.primary:hover { background: #1558d6; }
-        .action-btn.secondary { background: #f1f5f9; color: var(--text); border: 1px solid var(--border); }
-        .action-btn.secondary:hover { background: #e2e8f0; }
-        .action-btn.danger-clear { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
-        .action-btn.danger-clear:hover { background: #fecaca; }
+        .hdr-btn.primary { background: var(--primary); color: white; }
+        .hdr-btn.primary:hover { background: #1558d6; }
+        .hdr-btn.secondary { background: #f1f5f9; color: var(--text); border: 1px solid var(--border); }
+        .hdr-btn.secondary:hover { background: #e2e8f0; }
+        .hdr-btn.danger-clear { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; font-size: 13px; }
+        .hdr-btn.danger-clear:hover { background: #fecaca; }
 
         /* ── CONFIRM MODAL ── */
         #confirm-modal {
@@ -393,6 +389,11 @@
                 </div>
             </div>
             <input type="text" id="searchBar" class="search-input" placeholder="🔍 Νο ή Όνομα..." oninput="filterUmbrellas()">
+            <div class="header-action-btns">
+                <button class="hdr-btn secondary" onclick="addNewCustomUmbrella()">+ Ομπρέλα</button>
+                <button class="hdr-btn danger-clear" onclick="clearDay()">🗑</button>
+                <button class="hdr-btn primary" onclick="exportPDF()">PDF</button>
+            </div>
         </div>
     </header>
 
@@ -400,11 +401,7 @@
         <div id="zoom-wrapper"></div>
     </main>
 
-    <div class="control-bar">
-        <button class="action-btn secondary" onclick="addNewCustomUmbrella()">+ Έξτρα Ομπρέλα</button>
-        <button class="action-btn danger-clear" onclick="clearDay()">🗑 Εκκαθάριση</button>
-        <button class="action-btn primary" onclick="exportPDF()">Εξαγωγή PDF</button>
-    </div>
+
 
     <script>
         // ── PIN ──────────────────────────────────────────────────────
