@@ -225,7 +225,7 @@
             border-radius: 12px;
             padding: 6px 5px 8px;
             border: 2px solid var(--border);
-            flex: 0 0 160px;
+            flex: 0 0 110px; /* Στένεμα της κάρτας στα 110px */
             display: flex; flex-direction: column; align-items: center;
             position: relative;
             transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
@@ -264,8 +264,10 @@
             text-shadow: 0 1px 4px rgba(0,0,0,0.3);
         }
 
-        .inputs-form { width: 100%; display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
-        .input-field {
+        .inputs-form { width: 90%; display: flex; flex-direction: column; gap: 3px; margin: 4px auto 0; }
+        
+        /* Συνδυασμός της input-field με την card-inline-field για κεντράρισμα */
+        .input-field, .card-inline-field {
             width: 100%; border: none;
             border-bottom: 1px solid #e2e8f0;
             background: transparent; padding: 3px 2px;
@@ -273,8 +275,8 @@
             text-align: center; color: var(--text);
             font-family: 'DM Sans', sans-serif; transition: border-color 0.2s;
         }
-        .input-field::placeholder { color: #cbd5e1; }
-        .input-field:focus { border-bottom-color: var(--primary); }
+        .input-field::placeholder, .card-inline-field::placeholder { color: #cbd5e1; }
+        .input-field:focus, .card-inline-field:focus { border-bottom-color: var(--primary); }
 
         /* Status buttons */
         .status-row {
@@ -486,13 +488,10 @@
 <body>
 
 
-    <!-- STATUS POPUP -->
     <div id="status-popup" onclick="if(event.target===this)closeStatusPopup()">
         <div class="status-popup-card">
             <div class="status-popup-title" id="status-popup-title">Ομπρέλα 000</div>
-            <!-- Fields -->
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
-                <!-- Υπάλληλος -->
                 <div>
                     <div style="font-size:10px;font-weight:700;color:#94a3b8;margin-bottom:4px;">ΥΠΑΛΛΗΛΟΣ</div>
                     <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -503,18 +502,12 @@
                     </div>
                     <div id="sp-staff-display" style="font-size:11px;color:#1d6fe8;font-weight:700;margin-top:4px;min-height:16px;"></div>
                 </div>
-                <!-- Όνομα πελάτη -->
                 <input id="sp-customer" type="text" placeholder="Όνομα πελάτη" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('customer',this.value)">
-                <!-- Ώρα -->
                 <input id="sp-time" type="text" placeholder="Ώρα" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('time',this.value)">
-                <!-- Κατανάλωση -->
                 <input id="sp-consumption" type="number" placeholder="Κατανάλωση (€)" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('consumption',this.value)">
-                <!-- Σημειώσεις -->
                 <input id="sp-notes" type="text" placeholder="Σημειώσεις" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('notes',this.value)">
-                <!-- Extra σημειώσεις -->
                 <input id="sp-notes2" type="text" placeholder="Extra σημειώσεις" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('notes2',this.value)">
             </div>
-            <!-- Status buttons -->
             <div class="status-popup-btns">
                 <button class="sp-btn sp-free"     onclick="setStatusFromPopup('free')">✅<br>Διαθ.</button>
                 <button class="sp-btn sp-reserved" onclick="setStatusFromPopup('reserved')">🔴<br>Κρατ.</button>
@@ -526,7 +519,6 @@
         </div>
     </div>
 
-    <!-- RECOVERY PANEL -->
     <div id="recovery-panel" class="side-panel" onclick="if(event.target===this)toggleRecovery()">
         <div class="side-panel-card">
             <div class="side-panel-header">
@@ -539,7 +531,6 @@
         </div>
     </div>
 
-    <!-- HISTORY PANEL -->
     <div id="history-panel" class="side-panel" onclick="if(event.target===this)toggleHistory()">
         <div class="side-panel-card">
             <div class="side-panel-header">
@@ -552,7 +543,6 @@
         </div>
     </div>
 
-    <!-- CONFIRM MODAL -->
     <div id="confirm-modal">
         <div class="confirm-card">
             <div class="confirm-icon">🗑️</div>
@@ -600,7 +590,6 @@
     </div>
 
     <header>
-        <!-- ROW 1: zoom | action btns | date -->
         <input type="date" id="globalDate" style="display:none" onchange="changeWorkingDate()">
         <div class="header-row1">
             <div class="zoom-controls">
@@ -617,7 +606,6 @@
             </div>
 
         </div>
-        <!-- ROW 2: stat badges | search | action btns -->
         <div class="header-row2">
             <div class="stats-container">
                 <div class="stat-badge active" id="badge-all" onclick="setStatusFilter('all')">
@@ -651,7 +639,6 @@
 
 
 
-    <!-- OVERVIEW PANEL -->
     <div id="overview-panel">
         <div class="overview-topbar">
             <h3>🗺 Χάρτης Παραλίας</h3>
@@ -719,11 +706,35 @@
         let overviewOpen = false;
         let recoveryOpen = false;
         let historyOpen = false;
+        const ADMIN_PIN = '0852';
+        let adminUnlocked = false;
+        let adminTimer = null;
+
+        function requireAdmin(callback) {
+            if (adminUnlocked) { callback(); return; }
+            const pin = prompt('🔐 Κωδικός Admin:');
+            if (pin === ADMIN_PIN) {
+                adminUnlocked = true;
+                // Auto-lock after 5 minutes
+                clearTimeout(adminTimer);
+                adminTimer = setTimeout(() => { adminUnlocked = false; }, 5 * 60 * 1000);
+                callback();
+            } else if (pin !== null) {
+                alert('❌ Λάθος κωδικός!');
+            }
+        }
 
         function toggleRecovery() {
-            recoveryOpen = !recoveryOpen;
-            document.getElementById('recovery-panel').classList.toggle('open', recoveryOpen);
-            if (recoveryOpen) loadRecovery();
+            if (!recoveryOpen) {
+                requireAdmin(() => {
+                    recoveryOpen = true;
+                    document.getElementById('recovery-panel').classList.add('open');
+                    loadRecovery();
+                });
+            } else {
+                recoveryOpen = false;
+                document.getElementById('recovery-panel').classList.remove('open');
+            }
         }
 
         function loadRecovery() {
@@ -766,9 +777,16 @@
         }
 
         function toggleHistory() {
-            historyOpen = !historyOpen;
-            document.getElementById('history-panel').classList.toggle('open', historyOpen);
-            if (historyOpen) loadHistory();
+            if (!historyOpen) {
+                requireAdmin(() => {
+                    historyOpen = true;
+                    document.getElementById('history-panel').classList.add('open');
+                    loadHistory();
+                });
+            } else {
+                historyOpen = false;
+                document.getElementById('history-panel').classList.remove('open');
+            }
         }
 
         function loadHistory() {
@@ -939,6 +957,9 @@
         }
 
         function deleteUmbrella(num) {
+            requireAdmin(() => _deleteUmbrella(num));
+        }
+        function _deleteUmbrella(num) {
             if (!confirm("Διαγραφή ομπρέλας "+num+" μόνιμα;")) return;
             const d = document.getElementById('globalDate').value;
             const booking = (dailyBookings || {})[num] || {};
@@ -956,6 +977,9 @@
         }
 
         function clearDay() {
+            requireAdmin(() => _clearDay());
+        }
+        function _clearDay() {
             const d = document.getElementById('globalDate').value;
             showConfirm(
                 '🗑️ Εκκαθάριση ' + d + ';',
@@ -1049,15 +1073,10 @@
                         <div class="icon-box" onclick="openStatusPopup(${num})" style="cursor:pointer">
                             <span class="umb-number-badge" style="color:${textColor};">${num}</span>
                             <svg class="umbrella-svg" viewBox="0 0 100 100">
-                                <!-- Ομπρέλα γεμάτη με έντονο χρώμα -->
                                 <path d="M 10 52 Q 50 5 90 52 Z" fill="${fillColor}"/>
-                                <!-- Φωτεινή λεπτομέρεια πάνω -->
                                 <path d="M 10 52 Q 50 5 90 52" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
-                                <!-- Ανταύγεια στην κορυφή -->
                                 <path d="M 30 38 Q 50 12 70 38" fill="rgba(255,255,255,0.18)" />
-                                <!-- Βάση / κοτσάνι -->
                                 <rect x="48" y="52" width="4" height="38" fill="#334155" rx="2"/>
-                                <!-- Κάμψη στην άκρη -->
                                 <path d="M 44 88 Q 50 96 56 88" stroke="#334155" stroke-width="3" fill="none" stroke-linecap="round"/>
                             </svg>
                         </div>
