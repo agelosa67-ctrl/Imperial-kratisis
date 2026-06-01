@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="IBeach">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1a6bff">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.svg">
     <title>Imperial Beach Management</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -217,10 +222,10 @@
         /* ── UMBRELLA CARD ── */
         .umbrella-card {
             background: var(--surface);
-            border-radius: 16px;
-            padding: 8px 6px 8px;
+            border-radius: 12px;
+            padding: 6px 5px 8px;
             border: 2px solid var(--border);
-            flex: 0 0 118px;
+            flex: 0 0 160px;
             display: flex; flex-direction: column; align-items: center;
             position: relative;
             transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
@@ -259,7 +264,7 @@
             text-shadow: 0 1px 4px rgba(0,0,0,0.3);
         }
 
-        .inputs-form { width: 100%; display: flex; flex-direction: column; gap: 2px; }
+        .inputs-form { width: 100%; display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
         .input-field {
             width: 100%; border: none;
             border-bottom: 1px solid #e2e8f0;
@@ -310,6 +315,58 @@
         .hdr-btn.danger-clear:hover { background: #fecaca; }
         .hdr-btn.overview-btn { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; }
         .hdr-btn.overview-btn.active { background: var(--primary); color: #fff; }
+        .hdr-btn.recovery-btn { background: #fef3c7; color: #d97706; border: 1px solid #fcd34d; }
+        .hdr-btn.history-btn  { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+
+        /* ── RECOVERY & HISTORY PANELS ── */
+        .side-panel {
+            display: none; position: fixed; inset: 0;
+            background: rgba(15,23,42,0.5); backdrop-filter: blur(4px);
+            z-index: 400; align-items: center; justify-content: center; padding: 16px;
+        }
+        .side-panel.open { display: flex; }
+        .side-panel-card {
+            background: #fff; border-radius: 18px;
+            width: 100%; max-width: 420px; max-height: 80vh;
+            display: flex; flex-direction: column;
+            animation: slideUp 0.2s cubic-bezier(0.34,1.3,0.64,1);
+        }
+        .side-panel-header {
+            padding: 14px 16px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            flex-shrink: 0;
+        }
+        .side-panel-header h3 { margin: 0; font-size: 14px; font-weight: 800; }
+        .side-panel-header button {
+            background: #f1f5f9; border: none; border-radius: 8px;
+            padding: 5px 10px; font-size: 12px; font-weight: 700;
+            cursor: pointer; font-family: 'DM Sans', sans-serif;
+        }
+        .side-panel-body { padding: 12px; overflow-y: auto; flex: 1; }
+        .recovery-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 12px; border-radius: 10px; background: #f8fafc;
+            border: 1px solid var(--border); margin-bottom: 6px;
+        }
+        .recovery-item-info { font-size: 12px; }
+        .recovery-item-info strong { display: block; font-size: 13px; }
+        .recovery-item-info span { color: var(--muted); font-size: 11px; }
+        .recovery-restore-btn {
+            background: #fef3c7; color: #d97706; border: 1px solid #fcd34d;
+            border-radius: 8px; padding: 5px 10px; font-size: 11px; font-weight: 700;
+            cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap;
+        }
+        .history-date-group { margin-bottom: 10px; }
+        .history-date-label {
+            font-size: 10px; font-weight: 700; color: var(--muted);
+            letter-spacing: 1px; margin-bottom: 4px;
+        }
+        .history-item {
+            padding: 8px 10px; border-radius: 8px; background: #f8fafc;
+            border: 1px solid var(--border); margin-bottom: 4px;
+            font-size: 11px;
+        }
+        .history-item strong { color: var(--primary); }
 
         /* ── OVERVIEW PANEL ── */
         #overview-panel {
@@ -348,33 +405,44 @@
         .ov-legend-item { display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 600; color: var(--muted); }
         .ov-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
+        .staff-btn {
+            padding: 7px 12px; border: 1.5px solid #e2e8f0; border-radius: 20px;
+            background: #f8fafc; color: var(--text); font-size: 12px; font-weight: 700;
+            cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .staff-btn:active { transform: scale(0.95); }
+        .staff-btn.selected { background: #dbeafe; color: #1d6fe8; border-color: #93c5fd; }
+
         /* ── STATUS POPUP ── */
         #status-popup {
             display: none; position: fixed; inset: 0;
             background: rgba(15,23,42,0.5); backdrop-filter: blur(4px);
-            z-index: 500; align-items: flex-end; justify-content: center;
+            z-index: 500; align-items: center; justify-content: center;
+            overflow-y: auto; padding: 16px;
         }
         #status-popup.open { display: flex; }
         .status-popup-card {
-            background: #fff; border-radius: 20px 20px 0 0;
-            padding: 20px 20px 36px;
-            width: 100%; max-width: 480px;
-            animation: slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);
+            background: #fff; border-radius: 18px;
+            padding: 16px 16px 20px;
+            width: 100%; max-width: 400px;
+            animation: slideUp 0.2s cubic-bezier(0.34,1.3,0.64,1);
+            max-height: 90vh; overflow-y: auto;
         }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes slideUp { from { transform: scale(0.9); opacity:0; } to { transform: scale(1); opacity:1; } }
         .status-popup-title {
-            font-size: 18px; font-weight: 800; text-align: center;
-            margin-bottom: 16px; color: var(--text);
+            font-size: 15px; font-weight: 800; text-align: center;
+            margin-bottom: 10px; color: var(--text);
         }
         .status-popup-btns {
-            display: grid; grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            display: grid; grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px; margin-top: 10px;
         }
         .sp-btn {
-            padding: 16px 8px; border: 2px solid transparent;
-            border-radius: 14px; font-size: 15px; font-weight: 800;
+            padding: 10px 4px; border: 1.5px solid transparent;
+            border-radius: 10px; font-size: 11px; font-weight: 700;
             cursor: pointer; font-family: 'DM Sans', sans-serif;
-            transition: all 0.15s; text-align: center;
+            transition: all 0.15s; text-align: center; line-height: 1.3;
         }
         .sp-btn:active { transform: scale(0.95); }
         .sp-free     { background: #dcfce7; color: #16a34a; border-color: #86efac; }
@@ -424,18 +492,62 @@
             <div class="status-popup-title" id="status-popup-title">Ομπρέλα 000</div>
             <!-- Fields -->
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
-                <input id="sp-name"  type="text" placeholder="Όνομα"      style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;" oninput="updatePopupField('name',this.value)">
-                <input id="sp-time"  type="text" placeholder="Ώρα"        style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;" oninput="updatePopupField('time',this.value)">
-                <input id="sp-notes" type="text" placeholder="Σημειώσεις" style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;" oninput="updatePopupField('notes',this.value)">
+                <!-- Υπάλληλος -->
+                <div>
+                    <div style="font-size:10px;font-weight:700;color:#94a3b8;margin-bottom:4px;">ΥΠΑΛΛΗΛΟΣ</div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+<button class="staff-btn" onclick="selectStaff('Edisa')">Edisa</button>
+                        <button class="staff-btn" onclick="selectStaff('Anananias')">Anananias</button>
+                        <button class="staff-btn" onclick="selectStaff('Savvas')">Savvas</button>
+                        <button class="staff-btn" onclick="selectStaff('Sidorela')">Sidorela</button>
+                    </div>
+                    <div id="sp-staff-display" style="font-size:11px;color:#1d6fe8;font-weight:700;margin-top:4px;min-height:16px;"></div>
+                </div>
+                <!-- Όνομα πελάτη -->
+                <input id="sp-customer" type="text" placeholder="Όνομα πελάτη" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('customer',this.value)">
+                <!-- Ώρα -->
+                <input id="sp-time" type="text" placeholder="Ώρα" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('time',this.value)">
+                <!-- Κατανάλωση -->
+                <input id="sp-consumption" type="number" placeholder="Κατανάλωση (€)" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('consumption',this.value)">
+                <!-- Σημειώσεις -->
+                <input id="sp-notes" type="text" placeholder="Σημειώσεις" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('notes',this.value)">
+                <!-- Extra σημειώσεις -->
+                <input id="sp-notes2" type="text" placeholder="Extra σημειώσεις" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('notes2',this.value)">
             </div>
             <!-- Status buttons -->
             <div class="status-popup-btns">
-                <button class="sp-btn sp-free"     onclick="setStatusFromPopup('free')">✅ Διαθέσιμο</button>
-                <button class="sp-btn sp-reserved" onclick="setStatusFromPopup('reserved')">🔴 Κρατημένο</button>
-                <button class="sp-btn sp-hotel"    onclick="setStatusFromPopup('hotel')">🏨 Ξενοδοχείο</button>
-                <button class="sp-btn sp-special"  onclick="setStatusFromPopup('special')">⭐ Special</button>
-                <button class="sp-btn sp-broken"   onclick="setStatusFromPopup('broken')">🔧 Χαλασμένο</button>
+                <button class="sp-btn sp-free"     onclick="setStatusFromPopup('free')">✅<br>Διαθ.</button>
+                <button class="sp-btn sp-reserved" onclick="setStatusFromPopup('reserved')">🔴<br>Κρατ.</button>
+                <button class="sp-btn sp-hotel"    onclick="setStatusFromPopup('hotel')">🏨<br>Ξεν.</button>
+                <button class="sp-btn sp-special"  onclick="setStatusFromPopup('special')">⭐<br>Special</button>
+                <button class="sp-btn sp-broken"   onclick="setStatusFromPopup('broken')">🔧<br>Χαλ.</button>
                 <button class="sp-btn sp-close"    onclick="closeStatusPopup()">✕ Κλείσιμο</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECOVERY PANEL -->
+    <div id="recovery-panel" class="side-panel" onclick="if(event.target===this)toggleRecovery()">
+        <div class="side-panel-card">
+            <div class="side-panel-header">
+                <h3>↩ Ανεύρεση (24ώρες)</h3>
+                <button onclick="toggleRecovery()">✕</button>
+            </div>
+            <div class="side-panel-body" id="recovery-body">
+                <p style="color:var(--muted);text-align:center;font-size:12px">Δεν υπάρχουν διαγραμμένα στοιχεία</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTORY PANEL -->
+    <div id="history-panel" class="side-panel" onclick="if(event.target===this)toggleHistory()">
+        <div class="side-panel-card">
+            <div class="side-panel-header">
+                <h3>📋 Ιστορικό Κρατήσεων</h3>
+                <button onclick="toggleHistory()">✕</button>
+            </div>
+            <div class="side-panel-body" id="history-body">
+                <p style="color:var(--muted);text-align:center;font-size:12px">Φόρτωση...</p>
             </div>
         </div>
     </div>
@@ -489,6 +601,7 @@
 
     <header>
         <!-- ROW 1: zoom | action btns | date -->
+        <input type="date" id="globalDate" style="display:none" onchange="changeWorkingDate()">
         <div class="header-row1">
             <div class="zoom-controls">
                 <button class="zoom-btn" onclick="applyZoom(-0.1)">−</button>
@@ -496,15 +609,13 @@
                 <button class="zoom-btn" onclick="applyZoom(0.1)">+</button>
             </div>
             <div class="header-action-btns">
-                <button class="hdr-btn secondary" onclick="addNewCustomUmbrella()">+</button>
-                <button class="hdr-btn danger-clear" onclick="clearDay()">🗑</button>
-                <button class="hdr-btn overview-btn" id="overview-btn" onclick="toggleOverview()">🗺</button>
+                <button class="hdr-btn secondary" onclick="addNewCustomUmbrella()" title="Νέα ομπρέλα">+</button>
+                <button class="hdr-btn recovery-btn" onclick="toggleRecovery()" title="Ανεύρεση">↩</button>
+                <button class="hdr-btn history-btn" onclick="toggleHistory()" title="Ιστορικό">📋</button>
+                <button class="hdr-btn overview-btn" id="overview-btn" onclick="toggleOverview()" title="Χάρτης">🗺</button>
+                <button class="hdr-btn danger-clear" onclick="clearDay()" title="Εκκαθάριση" style="font-size:9px;padding:3px 5px;">🗑</button>
+            </div>
 
-            </div>
-            <div class="date-picker-wrapper">
-                <label>Ημ:</label>
-                <input type="date" id="globalDate" class="date-input" onchange="changeWorkingDate()">
-            </div>
         </div>
         <!-- ROW 2: stat badges | search | action btns -->
         <div class="header-row2">
@@ -606,16 +717,109 @@
 
         let masterUmbrellasList = {};
         let overviewOpen = false;
+        let recoveryOpen = false;
+        let historyOpen = false;
+
+        function toggleRecovery() {
+            recoveryOpen = !recoveryOpen;
+            document.getElementById('recovery-panel').classList.toggle('open', recoveryOpen);
+            if (recoveryOpen) loadRecovery();
+        }
+
+        function loadRecovery() {
+            database.ref('recovery').once('value', snap => {
+                const data = snap.val() || {};
+                const now = Date.now();
+                let html = '';
+                // Clean expired
+                Object.entries(data).forEach(([key, item]) => {
+                    if (item.expiresAt < now) {
+                        database.ref('recovery/'+key).remove();
+                        return;
+                    }
+                    const hoursLeft = Math.ceil((item.expiresAt - now) / 3600000);
+                    const b = item.booking || {};
+                    html += `<div class="recovery-item">
+                        <div class="recovery-item-info">
+                            <strong>Ομπρέλα ${item.num}</strong>
+                            <span>${b.name||'Χωρίς όνομα'} · ${item.date} · ${hoursLeft}ώρ. απομένουν</span>
+                        </div>
+                        <button class="recovery-restore-btn" onclick="restoreItem('${key}')">↩ Επαναφορά</button>
+                    </div>`;
+                });
+                document.getElementById('recovery-body').innerHTML = html ||
+                    '<p style="color:var(--muted);text-align:center;font-size:12px">Δεν υπάρχουν διαγραμμένα στοιχεία</p>';
+            });
+        }
+
+        function restoreItem(key) {
+            database.ref('recovery/'+key).once('value', snap => {
+                const item = snap.val();
+                if (!item) return;
+                database.ref('master_umbrellas/'+item.num).set({number: parseInt(item.num)});
+                if (item.booking && Object.keys(item.booking).length) {
+                    database.ref('bookings_by_date/'+item.date+'/'+item.num).set(item.booking);
+                }
+                database.ref('recovery/'+key).remove();
+                loadRecovery();
+            });
+        }
+
+        function toggleHistory() {
+            historyOpen = !historyOpen;
+            document.getElementById('history-panel').classList.toggle('open', historyOpen);
+            if (historyOpen) loadHistory();
+        }
+
+        function loadHistory() {
+            database.ref('bookings_by_date').once('value', snap => {
+                const data = snap.val() || {};
+                const dates = Object.keys(data).sort().reverse();
+                let html = '';
+                dates.forEach(date => {
+                    const bookings = data[date];
+                    const reserved = Object.values(bookings).filter(b => b.status && b.status !== 'free');
+                    if (!reserved.length) return;
+                    html += `<div class="history-date-group">
+                        <div class="history-date-label">${date}</div>`;
+                    reserved.forEach(b => {
+                        html += `<div class="history-item">
+                            <strong>Ομπρέλα ${b.number||''}</strong> · ${b.name||'-'} · <span style="color:var(--muted)">${b.status||''}</span>
+                            ${b.time?' · '+b.time:''} ${b.notes?' · '+b.notes:''}
+                        </div>`;
+                    });
+                    html += '</div>';
+                });
+                document.getElementById('history-body').innerHTML = html ||
+                    '<p style="color:var(--muted);text-align:center;font-size:12px">Δεν υπάρχει ιστορικό</p>';
+            });
+        }
         let popupCurrentNum = null;
 
         function openStatusPopup(num) {
             popupCurrentNum = num;
             document.getElementById('status-popup-title').textContent = 'Ομπρέλα ' + num;
             const b = (dailyBookings || {})[num] || {};
-            document.getElementById('sp-name').value  = b.name  || '';
-            document.getElementById('sp-time').value  = b.time  || '';
-            document.getElementById('sp-notes').value = b.notes || '';
+            // Staff
+            document.getElementById('sp-staff-display').textContent = b.staff ? '✓ ' + b.staff : '';
+            document.querySelectorAll('.staff-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.textContent === b.staff);
+            });
+            document.getElementById('sp-time').value       = b.time        || '';
+            document.getElementById('sp-customer').value    = b.customer    || '';
+            document.getElementById('sp-consumption').value = b.consumption || '';
+            document.getElementById('sp-notes').value       = b.notes       || '';
+            document.getElementById('sp-notes2').value      = b.notes2      || '';
             document.getElementById('status-popup').classList.add('open');
+        }
+
+        function selectStaff(name) {
+            if (!popupCurrentNum) return;
+            updatePopupField('staff', name);
+            document.getElementById('sp-staff-display').textContent = '✓ ' + name;
+            document.querySelectorAll('.staff-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.textContent === name);
+            });
         }
 
         function updatePopupField(field, value) {
@@ -670,6 +874,16 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('globalDate').value = today;
             startLiveSync();
+            // Auto-cleanup recovery every hour
+            setInterval(() => {
+                database.ref('recovery').once('value', snap => {
+                    const data = snap.val() || {};
+                    const now = Date.now();
+                    Object.entries(data).forEach(([key, item]) => {
+                        if (item.expiresAt < now) database.ref('recovery/'+key).remove();
+                    });
+                });
+            }, 3600000);
         };
 
         function applyZoom(dir) {
@@ -726,8 +940,19 @@
 
         function deleteUmbrella(num) {
             if (!confirm("Διαγραφή ομπρέλας "+num+" μόνιμα;")) return;
+            const d = document.getElementById('globalDate').value;
+            const booking = (dailyBookings || {})[num] || {};
+            // Save to recovery with 24h expiry
+            const recoveryData = {
+                num: num,
+                booking: booking,
+                date: d,
+                deletedAt: Date.now(),
+                expiresAt: Date.now() + 24*60*60*1000
+            };
+            database.ref('recovery/'+Date.now()).set(recoveryData);
             database.ref('master_umbrellas/'+num).remove();
-            database.ref('bookings_by_date/'+document.getElementById('globalDate').value+'/'+num).remove();
+            database.ref('bookings_by_date/'+d+'/'+num).remove();
         }
 
         function clearDay() {
@@ -837,9 +1062,9 @@
                             </svg>
                         </div>
                         <div class="inputs-form">
-                            <input type="text" class="input-field" placeholder="Όνομα"      value="${b.name||''}"  onchange="updateField('${num}','name',this.value)">
-                            <input type="text" class="input-field" placeholder="Ώρα"        value="${b.time||''}"  onchange="updateField('${num}','time',this.value)">
-                            <input type="text" class="input-field" placeholder="Σημειώσεις" value="${b.notes||''}" onchange="updateField('${num}','notes',this.value)">
+                            <input class="card-inline-field card-staff-field" placeholder="Υπαλ." value="${b.staff||''}" onchange="updateField('${num}','staff',this.value)" onclick="event.stopPropagation()">
+                            <input class="card-inline-field card-consumption-field" placeholder="€" type="number" value="${b.consumption||''}" onchange="updateField('${num}','consumption',this.value)" onclick="event.stopPropagation()">
+                            <input class="card-inline-field card-notes-field" placeholder="Σημ." value="${b.notes||''}" onchange="updateField('${num}','notes',this.value)" onclick="event.stopPropagation()">
                         </div>
 
                     `;
