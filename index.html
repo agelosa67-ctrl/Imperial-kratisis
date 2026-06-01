@@ -497,7 +497,13 @@
                 </div>
                 <input id="sp-customer" type="text" placeholder="Όνομα πελάτη" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('customer',this.value)">
                 <input id="sp-time" type="text" placeholder="Ώρα" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('time',this.value)">
-                <input id="sp-consumption" type="number" placeholder="Κατανάλωση (€)" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('consumption',this.value)">
+                
+                <!-- ΥΠΟΛΟΓΙΣΤΗΣ ΚΑΤΑΝΑΛΩΣΗΣ ΣΤΟ POPUP -->
+                <div style="position:relative; width:100%;">
+                    <input id="sp-consumption" type="text" placeholder="Κατανάλωση (€) π.χ. 10+5+20" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;padding-right:75px;" oninput="updatePopupField('consumption',this.value); updatePopupConsumptionTotal(this.value);">
+                    <span id="sp-consumption-total" style="position:absolute; right:12px; top:11px; font-size:13px; font-weight:700; color:var(--success); pointer-events:none;"></span>
+                </div>
+
                 <input id="sp-notes" type="text" placeholder="Σημειώσεις" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('notes',this.value)">
                 <input id="sp-notes2" type="text" placeholder="Extra σημειώσεις" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('notes2',this.value)">
                 
@@ -819,21 +825,25 @@
             document.getElementById('sp-time').value       = b.time        || '';
             document.getElementById('sp-customer').value    = b.customer    || '';
             document.getElementById('sp-consumption').value = b.consumption || '';
+            updatePopupConsumptionTotal(b.consumption || '');
             document.getElementById('sp-notes').value       = b.notes       || '';
             document.getElementById('sp-notes2').value      = b.notes2      || '';
             
-            // Καθαρισμός του πεδίου συνδεδεμένων ομπρελών όταν ανοίγει νέο popup
             document.getElementById('sp-linked').value     = '';
             
             document.getElementById('status-popup').classList.add('open');
         }
 
+        // ΑΛΛΑΓΗ 1: ΕΠΙΛΟΓΗ & ΑΦΑΙΡΕΣΗ ΥΠΑΛΛΗΛΟΥ ΜΕ ΔΕΥΤΕΡΟ ΚΛΙΚ
         function selectStaff(name) {
             if (!popupCurrentNum) return;
-            updatePopupField('staff', name);
-            document.getElementById('sp-staff-display').textContent = '✓ ' + name;
+            const currentStaff = (dailyBookings[popupCurrentNum] || {}).staff || '';
+            const newName = (currentStaff === name) ? '' : name;
+            
+            updatePopupField('staff', newName);
+            document.getElementById('sp-staff-display').textContent = newName ? '✓ ' + newName : '';
             document.querySelectorAll('.staff-btn').forEach(btn => {
-                btn.classList.toggle('selected', btn.textContent === name);
+                btn.classList.toggle('selected', btn.textContent === newName);
             });
         }
 
@@ -846,45 +856,52 @@
             popupCurrentNum = null;
         }
 
-        // ΕΝΗΜΕΡΩΜΕΝΗ ΣΥΝΑΡΤΗΣΗ ΓΙΑ ΑΥΤΟΜΑΤΗ ΣΥΝΔΕΣΗ ΚΑΙ ΕΛΕΓΧΟ PIN ΣΤΙΣ ΚΡΑΤΗΣΕΙΣ
         function setStatusFromPopup(status) {
             if (!popupCurrentNum) return;
-            
-            // Βρίσκουμε το τωρινό status της ομπρέλας
             const currentStatus = (dailyBookings[popupCurrentNum] || {}).status || 'free';
             
-            // Αν η ομπρέλα είναι ΗΔΗ κόκκινη (reserved) και πάμε να της αλλάξουμε κατάσταση
+            // Έλεγχος Admin αν πάμε να αλλάξουμε μια ήδη Κρατημένη ομπρέλα
             if (currentStatus === 'reserved' && status !== 'reserved') {
                 requireAdmin(() => {
                     executeStatusChange(status);
                 });
             } else {
-                // Αν δεν ήταν κόκκινη, προχωράει κανονικά χωρίς κωδικό
                 executeStatusChange(status);
             }
         }
 
-        // Η λειτουργία που εκτελείται ΜΕΤΑ τον έλεγχο
+        // ΑΛΛΑΓΗ 2: ΟΤΑΝ ΓΙΝΕΤΑΙ ΔΙΑΘΕΣΙΜΗ, ΣΒΗΝΟΝΤΑΙ ΟΛΑ ΜΟΝΟ ΣΤΗ ΣΥΓΚΕΚΡΙΜΕΝΗ ΟΜΠΡΕΛΑ
         function executeStatusChange(status) {
-            // 1. Αλλαγή στην τρέχουσα ομπρέλα
-            setStatus(popupCurrentNum, status);
+            const d = document.getElementById('globalDate').value;
             
-            // 2. Έλεγχος αν ο χρήστης έγραψε άλλες ομπρέλες για ταυτόχρονη ενημέρωση
+            if (status === 'free') {
+                database.ref('bookings_by_date/' + d + '/' + popupCurrentNum).set({
+                    status: 'free',
+                    customer: '',
+                    staff: '',
+                    time: '',
+                    consumption: '',
+                    notes: '',
+                    notes2: ''
+                });
+            } else {
+                setStatus(popupCurrentNum, status);
+            }
+            
             const linkedValue = document.getElementById('sp-linked').value;
             if (linkedValue.trim() !== '') {
                 const linkedUmbrellas = linkedValue.split(/[\s,]+/).filter(id => id.trim() !== '');
-                const d = document.getElementById('globalDate').value;
                 
-                const customer = document.getElementById('sp-customer').value;
-                const time = document.getElementById('sp-time').value;
-                const consumption = document.getElementById('sp-consumption').value;
-                const notes = document.getElementById('sp-notes').value;
-                const notes2 = document.getElementById('sp-notes2').value;
-                const staff = (dailyBookings[popupCurrentNum] || {}).staff || '';
+                const customer = status === 'free' ? '' : document.getElementById('sp-customer').value;
+                const time = status === 'free' ? '' : document.getElementById('sp-time').value;
+                const consumption = status === 'free' ? '' : document.getElementById('sp-consumption').value;
+                const notes = status === 'free' ? '' : document.getElementById('sp-notes').value;
+                const notes2 = status === 'free' ? '' : document.getElementById('sp-notes2').value;
+                const staff = status === 'free' ? '' : ((dailyBookings[popupCurrentNum] || {}).staff || '');
 
                 linkedUmbrellas.forEach(num => {
                     if (masterUmbrellasList[num]) {
-                        database.ref('bookings_by_date/' + d + '/' + num).update({
+                        database.ref('bookings_by_date/' + d + '/' + num).set({
                             status: status,
                             customer: customer,
                             staff: staff,
@@ -898,6 +915,29 @@
             }
             
             closeStatusPopup();
+        }
+
+        // ΑΛΛΑΓΗ 3: ΣΥΝΑΡΤΗΣΕΙΣ ΥΠΟΛΟΓΙΣΤΗ (CALCULATOR) ΓΙΑ ΤΗΝ ΚΑΤΑΝΑΛΩΣΗ
+        function safeEvalConsumption(val) {
+            if (!val) return 0;
+            let sanitized = val.toString().replace(/[^0-9+\-*/().\s]/g, '');
+            if (!sanitized.trim()) return 0;
+            try {
+                let res = new Function('return ' + sanitized)();
+                return (typeof res === 'number' && !isNaN(res)) ? Number(res.toFixed(2)) : 0;
+            } catch(e) {
+                return 0;
+            }
+        }
+
+        function updatePopupConsumptionTotal(val) {
+            const totalEl = document.getElementById('sp-consumption-total');
+            if (!val) {
+                totalEl.textContent = '';
+                return;
+            }
+            let total = safeEvalConsumption(val);
+            totalEl.textContent = total ? '= ' + total + '€' : '';
         }
 
         function toggleOverview() {
@@ -1047,7 +1087,6 @@
             if (e.target === this) closeConfirm();
         });
 
-        // ── ΛΕΙΤΟΥΡΓΙΑ CLICK & DRAG ΓΙΑ ΥΠΟΛΟΓΙΣΤΕΣ ──
         function enableDragScroll() {
             const containers = document.querySelectorAll('.row-cards-container');
             containers.forEach(container => {
@@ -1138,9 +1177,10 @@
                     card.className = 'umbrella-card';
                     card.setAttribute('data-status', b.status);
                     card.setAttribute('data-number', num);
-                    card.setAttribute('data-name', (b.name||'').toLowerCase());
+                    card.setAttribute('data-name', (b.customer||'').toLowerCase());
                     card.style.background = bgTint;
 
+                    // ΑΛΛΑΓΗ ΣΤΟ CARD INPUT: type="text" για να δέχεται πράξεις και tooltip με το Σύνολο
                     card.innerHTML = `
                         <button class="delete-icon" onclick="deleteUmbrella('${num}')">&times;</button>
                         <div class="icon-box" onclick="openStatusPopup(${num})" style="cursor:pointer">
@@ -1155,7 +1195,7 @@
                         </div>
                         <div class="inputs-form">
                             <input class="card-inline-field card-staff-field" placeholder="Υπαλ." value="${b.staff||''}" onchange="updateField('${num}','staff',this.value)" onclick="event.stopPropagation()">
-                            <input class="card-inline-field card-consumption-field" placeholder="€" type="number" value="${b.consumption||''}" onchange="updateField('${num}','consumption',this.value)" onclick="event.stopPropagation()">
+                            <input class="card-inline-field card-consumption-field" placeholder="€" type="text" value="${b.consumption||''}" onchange="updateField('${num}','consumption',this.value)" onclick="event.stopPropagation()" title="Σύνολο: ${safeEvalConsumption(b.consumption)}€">
                             <input class="card-inline-field card-notes-field" placeholder="Σημ." value="${b.notes||''}" onchange="updateField('${num}','notes',this.value)" onclick="event.stopPropagation()">
                         </div>
                     `;
