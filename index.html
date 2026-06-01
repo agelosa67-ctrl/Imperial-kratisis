@@ -501,7 +501,7 @@
                 <input id="sp-notes" type="text" placeholder="Σημειώσεις" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('notes',this.value)">
                 <input id="sp-notes2" type="text" placeholder="Extra σημειώσεις" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;" oninput="updatePopupField('notes2',this.value)">
                 
-                <!-- ΝΕΟ ΠΕΔΙΟ ΣΥΝΔΕΣΗΣ ΠΟΛΛΑΠΛΩΝ ΟΜΠΡΕΛΩΝ -->
+                <!-- ΠΕΔΙΟ ΣΥΝΔΕΣΗΣ ΠΟΛΛΑΠΛΩΝ ΟΜΠΡΕΛΩΝ -->
                 <input id="sp-linked" type="text" placeholder="🔗 Συνδεδεμένες ομπρέλες (π.χ. 102, 103)" style="padding:9px 12px;border:1.5px solid #bfdbfe;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box;background:#f0f7ff;">
             </div>
             <div class="status-popup-btns">
@@ -846,21 +846,35 @@
             popupCurrentNum = null;
         }
 
-        // ΕΝΗΜΕΡΩΜΕΝΗ ΣΥΝΑΡΤΗΣΗ ΓΙΑ ΑΥΤΟΜΑΤΗ ΣΥΝΔΕΣΗ ΠΟΛΛΑΠΛΩΝ ΟΜΠΡΕΛΩΝ
+        // ΕΝΗΜΕΡΩΜΕΝΗ ΣΥΝΑΡΤΗΣΗ ΓΙΑ ΑΥΤΟΜΑΤΗ ΣΥΝΔΕΣΗ ΚΑΙ ΕΛΕΓΧΟ PIN ΣΤΙΣ ΚΡΑΤΗΣΕΙΣ
         function setStatusFromPopup(status) {
             if (!popupCurrentNum) return;
             
+            // Βρίσκουμε το τωρινό status της ομπρέλας
+            const currentStatus = (dailyBookings[popupCurrentNum] || {}).status || 'free';
+            
+            // Αν η ομπρέλα είναι ΗΔΗ κόκκινη (reserved) και πάμε να της αλλάξουμε κατάσταση
+            if (currentStatus === 'reserved' && status !== 'reserved') {
+                requireAdmin(() => {
+                    executeStatusChange(status);
+                });
+            } else {
+                // Αν δεν ήταν κόκκινη, προχωράει κανονικά χωρίς κωδικό
+                executeStatusChange(status);
+            }
+        }
+
+        // Η λειτουργία που εκτελείται ΜΕΤΑ τον έλεγχο
+        function executeStatusChange(status) {
             // 1. Αλλαγή στην τρέχουσα ομπρέλα
             setStatus(popupCurrentNum, status);
             
             // 2. Έλεγχος αν ο χρήστης έγραψε άλλες ομπρέλες για ταυτόχρονη ενημέρωση
             const linkedValue = document.getElementById('sp-linked').value;
             if (linkedValue.trim() !== '') {
-                // Χωρίζουμε τις ομπρέλες με βάση το κόμμα ή το κενό
                 const linkedUmbrellas = linkedValue.split(/[\s,]+/).filter(id => id.trim() !== '');
                 const d = document.getElementById('globalDate').value;
                 
-                // Συλλέγουμε όλα τα τρέχοντα στοιχεία από το Popup
                 const customer = document.getElementById('sp-customer').value;
                 const time = document.getElementById('sp-time').value;
                 const consumption = document.getElementById('sp-consumption').value;
@@ -869,7 +883,6 @@
                 const staff = (dailyBookings[popupCurrentNum] || {}).staff || '';
 
                 linkedUmbrellas.forEach(num => {
-                    // Ελέγχουμε αν η ομπρέλα υπάρχει στην παραλία μας
                     if (masterUmbrellasList[num]) {
                         database.ref('bookings_by_date/' + d + '/' + num).update({
                             status: status,
